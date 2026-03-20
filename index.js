@@ -13,6 +13,7 @@ const alertSecondsInput = document.querySelector(".alert-seconds");
 const lowerAudio = document.querySelector(".audio-lower");
 const upperAudio = document.querySelector(".audio-upper");
 const withinAudio = document.querySelector(".audio-within");
+const batteryTxt = document.querySelector(".battery-level");
 
 let device;
 let heartRate;
@@ -168,7 +169,8 @@ async function requestDevice() {
 
   const options = {
     acceptAllDevices: true,
-    optionalServices: ["heart_rate"],
+    // include battery_service so the app can read battery level if the device exposes it
+    optionalServices: ["heart_rate", "battery_service"],
   };
   device = await navigator.bluetooth.requestDevice(options);
   device.addEventListener("gattserverdisconnected", connectDevice);
@@ -183,6 +185,25 @@ async function connectDevice() {
   heartRate = await service.getCharacteristic("heart_rate_measurement");
   heartRate.addEventListener("characteristicvaluechanged", handleRateChange);
   console.log("connected");
+
+  // Try to read battery level if the device exposes the Battery Service
+  try {
+    const batteryService = await server.getPrimaryService("battery_service");
+    const batteryChar = await batteryService.getCharacteristic("battery_level");
+    const v = await batteryChar.readValue();
+    if (batteryTxt) batteryTxt.textContent = `Battery: ${v.getUint8(0)}%`;
+    // Start notifications if supported so the UI stays up to date
+    if (batteryChar.properties.notify) {
+      batteryChar.addEventListener("characteristicvaluechanged", (ev) => {
+        const val = ev.target.value.getUint8(0);
+        if (batteryTxt) batteryTxt.textContent = `Battery: ${val}%`;
+      });
+      try { await batteryChar.startNotifications(); } catch (e) { /* ignore */ }
+    }
+  } catch (e) {
+    // Battery service not available or not permitted — leave indicator as-is
+    console.debug('Battery service unavailable', e && e.message);
+  }
 }
 
 async function startMonitoring() {
@@ -357,3 +378,8 @@ disconnectBTN.addEventListener("click", disconnect);
 stopBTN.addEventListener("click", stopMonitoring);
 startBTN.addEventListener("click", startMonitoring);
 exportBTN.addEventListener("click", exportCSV);
+
+// Toggle simple view when heart is tapped: hide everything except heart and BPM
+heartUI.addEventListener("click", () => {
+  document.body.classList.toggle("simple-view");
+});

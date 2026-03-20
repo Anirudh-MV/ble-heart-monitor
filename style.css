@@ -197,3 +197,31 @@ button:disabled {
     transform: scale(0.75);
   }
 }
+
+/* Simple view: show only the heart and hide controls/title for distraction-free display */
+body.simple-view .app-title {
+  display: none;
+}
+
+body.simple-view .connect-ui,
+body.simple-view .controls,
+body.simple-view .buttons,
+body.simple-view .export,
+body.simple-view .error,
+body.simple-view .session-picker {
+  display: none !important;
+}
+
+body.simple-view .heart img {
+  width: 340px;
+}
+
+body.simple-view .bpm {
+  font-size: 120px;
+}
+
+.battery-level {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
