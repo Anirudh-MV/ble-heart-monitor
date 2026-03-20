@@ -257,3 +257,31 @@ body.simple-view .bpm {
   color: #666;
   font-size: 14px;
 }
+
+.pip-placeholder {
+  width: 250px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  color: #aaa;
+  font-size: 14px;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+.pip-placeholder:hover {
+  border-color: #999;
+  color: #777;
+}
+
+.pip-placeholder.hide {
+  display: none !important;
+}
+
+.pip-toggle {
+  background: #7b4ea6;
+  border-color: #7b4ea6;
+}

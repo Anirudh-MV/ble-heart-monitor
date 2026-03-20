@@ -382,6 +382,7 @@ async function openHistoryPicker() {
 }
 
 async function disconnect() {
+  closePiP();
   if (isRecording) await stopMonitoring();
   if (device && device.gatt.connected) device.gatt.disconnect();
   bpmTxt.textContent = "--";
@@ -445,3 +446,87 @@ darkToggleButtons.forEach(b => b.addEventListener('click', () => {
   const stored = localStorage.getItem('bthm-dark');
   if (stored === '1') setDarkMode(true);
 })();
+
+// Picture-in-Picture (Document PiP) for heart-only view
+const pipToggle = document.querySelector('.pip-toggle');
+const pipPlaceholder = document.querySelector('.pip-placeholder');
+let pipWindow = null;
+
+async function openPiP() {
+  if (!('documentPictureInPicture' in window)) return;
+  try {
+    pipWindow = await window.documentPictureInPicture.requestWindow({ width: 340, height: 360 });
+
+    // Copy styles from main document into PiP window
+    const link = document.querySelector('link[rel="stylesheet"]');
+    if (link) {
+      const l2 = pipWindow.document.createElement('link');
+      l2.rel = 'stylesheet';
+      l2.href = link.href;
+      pipWindow.document.head.appendChild(l2);
+    }
+
+    // Mirror dark mode
+    if (document.documentElement.classList.contains('dark')) {
+      pipWindow.document.documentElement.classList.add('dark');
+    }
+
+    // Style PiP body for a clean centred look
+    pipWindow.document.body.style.cssText = 'margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111;';
+
+    // Show placeholder in main UI; clicking it exits PiP
+    pipPlaceholder.classList.remove('hide');
+    pipPlaceholder.style.cursor = 'pointer';
+
+    // Move heart and battery into PiP
+    pipWindow.document.body.appendChild(heartUI);
+    if (batteryTxt) pipWindow.document.body.appendChild(batteryTxt);
+
+    // Update button text
+    if (pipToggle) pipToggle.textContent = 'Exit PiP';
+
+    // Restore nodes when the PiP window is closed by the user
+    pipWindow.addEventListener('pagehide', () => {
+      // Only restore — don't call closePiP() fully as the window is already closing
+      pipPlaceholder.classList.add('hide');
+      const container = document.querySelector('.ui');
+      container.insertBefore(heartUI, pipPlaceholder);
+      if (batteryTxt) pipPlaceholder.after(batteryTxt);
+      pipWindow = null;
+      if (pipToggle) pipToggle.textContent = 'PiP';
+    });
+  } catch (e) {
+    console.debug('PiP open failed', e && e.message);
+    pipWindow = null;
+  }
+}
+
+function closePiP() {
+  if (!pipWindow) return;
+  const closing = pipWindow;
+  pipWindow = null;
+
+  // Restore nodes into main UI first
+  pipPlaceholder.classList.add('hide');
+  const container = document.querySelector('.ui');
+  container.insertBefore(heartUI, pipPlaceholder);
+  if (batteryTxt) pipPlaceholder.after(batteryTxt);
+
+  // Now close the window (this will fire pagehide, but pipWindow is already null so it's a no-op)
+  try { closing.close(); } catch (e) {}
+
+  if (pipToggle) pipToggle.textContent = 'PiP';
+}
+
+if (!('documentPictureInPicture' in window)) {
+  // Hide PiP control if the API is unavailable
+  if (pipToggle) pipToggle.style.display = 'none';
+} else if (pipToggle) {
+  pipToggle.addEventListener('click', () => {
+    if (pipWindow) closePiP(); else openPiP();
+  });
+}
+
+// Clicking the placeholder also exits PiP
+if (pipPlaceholder) pipPlaceholder.addEventListener('click', () => closePiP());
+
