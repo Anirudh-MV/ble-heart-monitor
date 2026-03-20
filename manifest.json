@@ -1,0 +1,18 @@
+{
+  "name": "BT Heart Monitor",
+  "short_name": "Heart Monitor",
+  "description": "Bluetooth heart rate monitor with limit alerts and session recording",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#444444",
+  "icons": [
+    {
+      "src": "heart.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

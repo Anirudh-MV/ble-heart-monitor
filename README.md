@@ -1,17 +1,16 @@
 #  bt-heart-monitor
 A web client for Bluetooth heart monitoring devices, built with the Web Bluetooth API.
 
-![Screen Recording 2024-01-09 at 2 46 14 PM](https://github.com/megaconfidence/bt-heart-monitor/assets/17744578/58e51e6f-255e-408d-b103-e6bd242cdc48)
+# Audio files
 
-## Usage
-Visit the project's [live url](https://megaconfidence.github.io/bt-heart-monitor/) with a [supported browser](https://caniuse.com/web-bluetooth). Then, connect a Bluetooth device with heart monitoring capabilities. If you don't have such a device, you can emulate one using your smartphone following the [guide below](#set-up-a-heart-monitor-emulator).
+The speech audio files were generated using [Luvvoice](https://luvvoice.com).
 
 ## Local Project Set Up
 This project has zero dependencies and is really easy to set up. A static file server like Python's _http.server_ (shown below) can be used to server the assets.
 
 Run the commands to get up and running:
 ```sh
-git clone https://github.com/megaconfidence/bt-heart-monitor.git
+git clone https://github.com/Anirudh-MV/ble-heart-monitor
 cd bt-heart-monitor/
 python3 -m http.server 3000
 ```

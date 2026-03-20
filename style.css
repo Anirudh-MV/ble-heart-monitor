@@ -30,8 +30,9 @@ body {
 }
 
 .heart {
+  position: relative;
   user-select: none;
-  animation: heartbeat var(--animation-speed) infinite;
+  display: inline-block;
 }
 
 .heart img {
@@ -59,8 +60,85 @@ button {
   border-radius: 1vh;
 }
 
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .error {
   margin-top: 10px;
+}
+
+.controls {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin: 16px 0 8px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.control-group label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.control-group select,
+.control-group input {
+  font-size: 16px;
+  font-family: var(--font);
+  padding: 6px 10px;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  outline: none;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.control-group select:focus,
+.control-group input:focus {
+  border-color: #444;
+}
+
+.control-group input {
+  cursor: text;
+  width: 96px;
+}
+
+/* Hide the native number input spinners */
+.control-group input::-webkit-inner-spin-button,
+.control-group input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.control-group input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.buttons {
+  margin-top: 4px;
+}
+
+.export {
+  background: #2a7d4f;
+  border-color: #2a7d4f;
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+.export:hover {
+  background: #235e3b;
+  border-color: #235e3b;
 }
 
 @keyframes heartbeat {

@@ -6,6 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>BT Heart Monitor</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#444444" />
   </head>
   <body>
     <div class="connect-ui">
@@ -24,14 +26,47 @@
       </div>
     </div>
     <div class="ui hide">
+      <audio class="audio-lower" src="audio/lower-limit-crossed.mp3"></audio>
+      <audio class="audio-upper" src="audio/upper-limit-crossed.mp3"></audio>
+      <audio class="audio-within" src="audio/within-range.mp3"></audio>
       <div class="heart">
         <img src="heart.png" />
-        <audio src="heartbeat.mp3" loop></audio>
         <div class="bpm">--</div>
       </div>
-      <button class="start">start</button>
-      <button class="stop">stop</button>
+      <div class="controls">
+        <div class="control-group">
+          <label for="lower-limit">Lower limit (BPM)</label>
+          <select id="lower-limit" class="lower-limit">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="upper-limit">Upper limit (BPM)</label>
+          <select id="upper-limit" class="upper-limit">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="alert-seconds">Alert after (seconds)</label>
+          <input
+            id="alert-seconds"
+            class="alert-seconds"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="e.g. 5"
+          />
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="start">start</button>
+        <button class="stop">stop</button>
+      </div>
+      <button class="export hide">export csv</button>
     </div>
     <script src="index.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    </script>
   </body>
 </html>
