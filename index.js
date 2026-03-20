@@ -21,8 +21,28 @@ let heartRate;
 let isRecording = false;
 let recordingData = [];
 
-// Historic sessions stored in localStorage under this key
-const SESSIONS_KEY = "bthm_sessions";
+// IndexedDB name / store
+const DB_NAME = "bthm-db";
+const DB_VERSION = 1;
+const STORE_SESSIONS = "sessions";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
+        db.createObjectStore(STORE_SESSIONS, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function closeDB(db) {
+  try { db.close(); } catch (e) {}
+}
 
 // Alert state
 let lowerBreachStart = null;
@@ -206,18 +226,56 @@ function exportCSV() {
 }
 
 // Persist a completed session to localStorage
-function saveSession(readings) {
-  const sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
+async function saveSession(readings) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_SESSIONS, "readwrite");
+  const store = tx.objectStore(STORE_SESSIONS);
   const id = new Date().toISOString();
   const label = new Date(id).toLocaleString();
-  sessions.push({ id, label, readings: readings.map(r => ({ timestamp: new Date(r.timestamp).toISOString(), bpm: r.bpm })) });
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+  const record = { id, label, readings: readings.map(r => ({ timestamp: new Date(r.timestamp).toISOString(), bpm: r.bpm })) };
+  store.add(record);
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => { closeDB(db); resolve(record); };
+    tx.onerror = (e) => { closeDB(db); reject(e.target.error); };
+  });
+}
+
+async function getAllSessions() {
+  const db = await openDB();
+  const tx = db.transaction(STORE_SESSIONS, "readonly");
+  const store = tx.objectStore(STORE_SESSIONS);
+  return new Promise((resolve, reject) => {
+    const req = store.getAll();
+    req.onsuccess = () => { closeDB(db); resolve(req.result); };
+    req.onerror = (e) => { closeDB(db); reject(e.target.error); };
+  });
+}
+
+async function getSessionById(id) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_SESSIONS, "readonly");
+  const store = tx.objectStore(STORE_SESSIONS);
+  return new Promise((resolve, reject) => {
+    const req = store.get(id);
+    req.onsuccess = () => { closeDB(db); resolve(req.result); };
+    req.onerror = (e) => { closeDB(db); reject(e.target.error); };
+  });
+}
+
+async function deleteSessionById(id) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_SESSIONS, "readwrite");
+  const store = tx.objectStore(STORE_SESSIONS);
+  return new Promise((resolve, reject) => {
+    const req = store.delete(id);
+    tx.oncomplete = () => { closeDB(db); resolve(); };
+    tx.onerror = (e) => { closeDB(db); reject(e.target.error); };
+  });
 }
 
 // Export a historic session by id
-function exportHistoricSession(sessionId) {
-  const sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
-  const s = sessions.find(x => x.id === sessionId);
+async function exportHistoricSession(sessionId) {
+  const s = await getSessionById(sessionId);
   if (!s) return alert("Session not found");
   const rows = ["timestamp,bpm"];
   for (const entry of s.readings) rows.push(`${entry.timestamp},${entry.bpm}`);
@@ -231,36 +289,31 @@ function exportHistoricSession(sessionId) {
   URL.revokeObjectURL(url);
 }
 
-// UI: Export history modal
+// UI: Export history via native select picker
 const exportHistoryBTN = document.querySelector(".export-history");
-const modal = document.querySelector(".modal");
-const sessionList = document.querySelector(".session-list");
-const modalClose = document.querySelector(".modal-close");
+const sessionPicker = document.querySelector(".session-picker");
 
-exportHistoryBTN.addEventListener("click", openHistoryModal);
-modalClose.addEventListener("click", () => modal.classList.add("hide"));
+exportHistoryBTN.addEventListener("click", openHistoryPicker);
+sessionPicker.addEventListener("change", () => {
+  const id = sessionPicker.value;
+  sessionPicker.value = "";
+  if (id) exportHistoricSession(id);
+});
 
-function openHistoryModal() {
-  const sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
-  sessionList.innerHTML = "";
-  if (sessions.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "No saved sessions";
-    sessionList.appendChild(li);
+async function openHistoryPicker() {
+  const sessions = await getAllSessions();
+  sessionPicker.innerHTML = '<option value="" disabled selected>Select a session</option>';
+  if (!sessions || sessions.length === 0) {
+    sessionPicker.innerHTML = '<option value="" disabled selected>No saved sessions</option>';
   } else {
     for (const s of sessions.slice().reverse()) {
-      const li = document.createElement("li");
-      li.className = "session-item";
-      li.textContent = s.label;
-      li.dataset.id = s.id;
-      li.addEventListener("click", () => {
-        exportHistoricSession(s.id);
-        modal.classList.add("hide");
-      });
-      sessionList.appendChild(li);
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.label;
+      sessionPicker.appendChild(opt);
     }
   }
-  modal.classList.remove("hide");
+  sessionPicker.showPicker();
 }
 
 async function init() {

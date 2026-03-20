@@ -1,6 +1,10 @@
 # ble-heart-monitor
 A web client for Bluetooth heart monitoring devices, built with the Web Bluetooth API.
 
+## Demo
+
+A live demo of the application is available [here](https://hr.anirudhmv.in).
+
 ## Features
 
 - **Live BPM display** — reads heart rate data in real time from any Bluetooth device advertising the standard `heart_rate` GATT service
