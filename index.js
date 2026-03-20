@@ -67,14 +67,13 @@ for (let bpm = 30; bpm <= 220; bpm += 5) {
   upperLimitSel.appendChild(optUpper);
 }
 
-// Enforce natural numbers only on the seconds input
+// Enforce whole numbers >= 0 on the seconds input
 alertSecondsInput.addEventListener("input", () => {
   const raw = alertSecondsInput.value;
   // Strip anything that's not a digit
   const cleaned = raw.replace(/[^0-9]/g, "");
-  // Remove leading zeros, enforce minimum of 1
   const num = parseInt(cleaned, 10);
-  alertSecondsInput.value = isNaN(num) || num < 1 ? "" : String(num);
+  alertSecondsInput.value = isNaN(num) ? "" : String(num);
 });
 
 function parseHeartRate(value) {
@@ -85,13 +84,16 @@ function parseHeartRate(value) {
 
 function getAlertSeconds() {
   const val = parseInt(alertSecondsInput.value, 10);
-  return isNaN(val) || val < 1 ? null : val;
+  // 0 means disabled; empty/invalid falls back to default of 5
+  if (isNaN(val) || val < 0) return 5;
+  return val;
 }
 
 function checkAlerts(bpm) {
   const lowerLimit = lowerLimitSel.value ? parseInt(lowerLimitSel.value, 10) : null;
   const upperLimit = upperLimitSel.value ? parseInt(upperLimitSel.value, 10) : null;
-  const thresholdMs = getAlertSeconds() !== null ? getAlertSeconds() * 1000 : null;
+  const alertSeconds = getAlertSeconds();
+  const thresholdMs = alertSeconds === 0 ? null : alertSeconds * 1000;
 
   const now = Date.now();
 
