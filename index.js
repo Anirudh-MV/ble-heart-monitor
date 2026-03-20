@@ -22,6 +22,37 @@ let heartRate;
 let isRecording = false;
 let recordingData = [];
 
+// Wake lock
+let wakeLock = null;
+
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) {
+    console.debug('Wake lock failed:', e.message);
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLock) {
+    try { await wakeLock.release(); } catch (e) { /* ignore */ }
+    wakeLock = null;
+  }
+}
+
+// Re-acquire wake lock when the page becomes visible again (browser releases it on hide)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && isRecording) acquireWakeLock();
+});
+
+// Post a background notification via the SW when the page is hidden
+function notifyAlert(message) {
+  if (!document.hidden) return; // app is visible — audio is enough
+  if (!navigator.serviceWorker.controller) return;
+  navigator.serviceWorker.controller.postMessage({ type: 'ALERT', message });
+}
+
 // IndexedDB name / store
 const DB_NAME = "bthm-db";
 const DB_VERSION = 1;
@@ -106,6 +137,7 @@ function checkAlerts(bpm) {
     } else if (!lowerAlertFired && now - lowerBreachStart >= thresholdMs) {
       lowerAudio.currentTime = 0;
       lowerAudio.play();
+      notifyAlert(`Heart rate ${bpm} BPM is below the lower limit of ${lowerLimit} BPM`);
       lowerAlertFired = true;
     }
   } else {
@@ -121,6 +153,7 @@ function checkAlerts(bpm) {
     } else if (!upperAlertFired && now - upperBreachStart >= thresholdMs) {
       upperAudio.currentTime = 0;
       upperAudio.play();
+      notifyAlert(`Heart rate ${bpm} BPM is above the upper limit of ${upperLimit} BPM`);
       upperAlertFired = true;
     }
   } else {
@@ -144,6 +177,7 @@ function checkAlerts(bpm) {
     } else if (!withinAlertFired && now - withinRangeStart >= thresholdMs) {
       withinAudio.currentTime = 0;
       withinAudio.play();
+      notifyAlert(`Heart rate ${bpm} BPM is back within range`);
       withinAlertFired = true;
     }
   } else {
@@ -213,6 +247,9 @@ async function startMonitoring() {
   startBTN.disabled = true;
   stopBTN.disabled = false;
 
+  // Keep screen on while recording
+  await acquireWakeLock();
+
   // Reset alert state on new session
   lowerBreachStart = null;
   upperBreachStart = null;
@@ -220,13 +257,13 @@ async function startMonitoring() {
   upperAlertFired = false;
   withinRangeStart = null;
   withinAlertFired = false;
-
 }
 
 async function stopMonitoring() {
   isRecording = false;
   startBTN.disabled = false;
   stopBTN.disabled = true;
+  await releaseWakeLock();
   // Save session to history if any data was recorded
   if (recordingData.length > 0) {
     saveSession(recordingData);
@@ -359,6 +396,11 @@ async function init() {
   if (!navigator.bluetooth) return errorTxt.classList.remove("hide");
   if (!device) await requestDevice();
 
+  // Request notification permission so background alerts can fire
+  if ('Notification' in window && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+
   connectBTN.textContent = "connecting...";
   await connectDevice();
 
@@ -383,3 +425,23 @@ exportBTN.addEventListener("click", exportCSV);
 heartUI.addEventListener("click", () => {
   document.body.classList.toggle("simple-view");
 });
+
+// Dark mode toggle (buttons exist on connect and monitor screens)
+const darkToggleButtons = document.querySelectorAll('.dark-toggle');
+function setDarkMode(enabled) {
+  if (enabled) document.documentElement.classList.add('dark');
+  else document.documentElement.classList.remove('dark');
+  localStorage.setItem('bthm-dark', enabled ? '1' : '0');
+  darkToggleButtons.forEach(b => b.textContent = enabled ? 'Light' : 'Dark');
+}
+
+darkToggleButtons.forEach(b => b.addEventListener('click', () => {
+  const enabled = document.documentElement.classList.toggle('dark');
+  setDarkMode(enabled);
+}));
+
+// Initialize theme from localStorage
+(function(){
+  const stored = localStorage.getItem('bthm-dark');
+  if (stored === '1') setDarkMode(true);
+})();

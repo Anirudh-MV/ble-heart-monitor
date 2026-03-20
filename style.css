@@ -2,6 +2,17 @@
   --animation-speed: 1s;
   --font: -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue",
     sans-serif;
+  /* color tokens */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #222222;
+  --muted: #555555;
+  --button-bg: #444444;
+  --button-border: #444444;
+  --export-bg: #2a7d4f;
+  --export-history-bg: #3b5aa6;
+  --disconnect-bg: #9b2335;
+  --bpm-text: #ffffff;
 }
 
 * {
@@ -21,12 +32,16 @@
 }
 
 body {
-  top: 50%;
-  left: 50%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  position: absolute;
   font-family: var(--font);
-  transform: translate(-50%, -50%);
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .heart {
@@ -42,7 +57,7 @@ body {
 .bpm {
   top: 50%;
   left: 50%;
-  color: #fff;
+  color: var(--bpm-text);
   font-size: 100px;
   position: absolute;
   transform: translate(-50%, -50%);
@@ -54,9 +69,9 @@ button {
   outline: none;
   cursor: pointer;
   font-size: 30px;
-  background: #444;
+  background: var(--button-bg);
   padding: 10px 20px;
-  border-color: #444;
+  border-color: var(--button-border);
   border-radius: 1vh;
 }
 
@@ -69,7 +84,7 @@ button:disabled {
   font-size: 22px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: #222;
+  color: var(--text);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -80,7 +95,7 @@ button:disabled {
   text-align: left;
   line-height: 1.65;
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
 }
 
 .error {
@@ -147,14 +162,31 @@ button:disabled {
   margin-top: 4px;
 }
 
+/* Dark mode variables and toggle button */
+:root.dark {
+  --bg: #0b0b0d;
+  --surface: #121214;
+  --text: #e6e6e6;
+  --muted: #bfc3c7;
+  --primary: #2a7d4f;
+}
+
+.dark-toggle {
+  background: #666;
+  border-color: #666;
+  font-size: 18px;
+  padding: 8px 12px;
+  margin: 8px;
+}
+
 .export-history {
-  background: #3b5aa6;
-  border-color: #3b5aa6;
+  background: var(--export-history-bg);
+  border-color: var(--export-history-bg);
 }
 
 .disconnect {
-  background: #9b2335;
-  border-color: #9b2335;
+  background: var(--disconnect-bg);
+  border-color: var(--disconnect-bg);
 }
 
 .session-picker {
@@ -166,8 +198,8 @@ button:disabled {
 }
 
 .export {
-  background: #2a7d4f;
-  border-color: #2a7d4f;
+  background: var(--export-bg);
+  border-color: var(--export-bg);
   font-size: 20px;
   margin-top: 4px;
 }

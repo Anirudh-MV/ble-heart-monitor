@@ -36,3 +36,16 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
+
+// Show a system notification when the page posts an ALERT message
+self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "ALERT") return;
+  event.waitUntil(
+    self.registration.showNotification("HR Monitor Alert", {
+      body: event.data.message,
+      icon: "/heart.png",
+      tag: "hr-alert",         // replaces previous alert instead of stacking
+      renotify: true,           // vibrate/sound even if same tag
+    })
+  );
+});
