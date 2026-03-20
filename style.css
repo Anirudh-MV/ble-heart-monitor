@@ -129,6 +129,64 @@ button:disabled {
   margin-top: 4px;
 }
 
+.export-history {
+  background: #3b5aa6;
+  border-color: #3b5aa6;
+}
+
+/* Modal for historic sessions */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.modal-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  width: 320px;
+  max-height: 70vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.session-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-item {
+  background: #f4f4f4;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.session-item:hover {
+  background: #e6e6e6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .export {
   background: #2a7d4f;
   border-color: #2a7d4f;

@@ -1,6 +1,6 @@
 {
-  "name": "BT Heart Monitor",
-  "short_name": "Heart Monitor",
+  "name": "BLE HR Monitor",
+  "short_name": "HR Monitor",
   "description": "Bluetooth heart rate monitor with limit alerts and session recording",
   "start_url": "/",
   "display": "standalone",

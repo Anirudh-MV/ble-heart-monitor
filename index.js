@@ -21,6 +21,9 @@ let heartRate;
 let isRecording = false;
 let recordingData = [];
 
+// Historic sessions stored in localStorage under this key
+const SESSIONS_KEY = "bthm_sessions";
+
 // Alert state
 let lowerBreachStart = null;
 let upperBreachStart = null;
@@ -172,16 +175,14 @@ async function startMonitoring() {
   withinRangeStart = null;
   withinAlertFired = false;
 
-  await heartRate.startNotifications();
 }
 
 async function stopMonitoring() {
   isRecording = false;
   startBTN.disabled = false;
-  await heartRate.stopNotifications();
-  heartUI.classList.add("pause-animation");
-
+  // Save session to history if any data was recorded
   if (recordingData.length > 0) {
+    saveSession(recordingData);
     exportBTN.classList.remove("hide");
   }
 }
@@ -204,6 +205,64 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
+// Persist a completed session to localStorage
+function saveSession(readings) {
+  const sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
+  const id = new Date().toISOString();
+  const label = new Date(id).toLocaleString();
+  sessions.push({ id, label, readings: readings.map(r => ({ timestamp: new Date(r.timestamp).toISOString(), bpm: r.bpm })) });
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+}
+
+// Export a historic session by id
+function exportHistoricSession(sessionId) {
+  const sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
+  const s = sessions.find(x => x.id === sessionId);
+  if (!s) return alert("Session not found");
+  const rows = ["timestamp,bpm"];
+  for (const entry of s.readings) rows.push(`${entry.timestamp},${entry.bpm}`);
+  const csv = rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `heartrate-${s.id}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// UI: Export history modal
+const exportHistoryBTN = document.querySelector(".export-history");
+const modal = document.querySelector(".modal");
+const sessionList = document.querySelector(".session-list");
+const modalClose = document.querySelector(".modal-close");
+
+exportHistoryBTN.addEventListener("click", openHistoryModal);
+modalClose.addEventListener("click", () => modal.classList.add("hide"));
+
+function openHistoryModal() {
+  const sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
+  sessionList.innerHTML = "";
+  if (sessions.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No saved sessions";
+    sessionList.appendChild(li);
+  } else {
+    for (const s of sessions.slice().reverse()) {
+      const li = document.createElement("li");
+      li.className = "session-item";
+      li.textContent = s.label;
+      li.dataset.id = s.id;
+      li.addEventListener("click", () => {
+        exportHistoricSession(s.id);
+        modal.classList.add("hide");
+      });
+      sessionList.appendChild(li);
+    }
+  }
+  modal.classList.remove("hide");
+}
+
 async function init() {
   if (!navigator.bluetooth) return errorTxt.classList.remove("hide");
   if (!device) await requestDevice();
@@ -213,7 +272,11 @@ async function init() {
 
   appUI.classList.remove("hide");
   connectUI.classList.add("hide");
-  await startMonitoring();
+  // Start receiving live heart rate notifications so the BPM is visible
+  // Recording will only start when the user presses Start
+  if (heartRate) {
+    await heartRate.startNotifications();
+  }
 }
 
 connectBTN.addEventListener("click", init);

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>BT Heart Monitor</title>
+    <title>BLE Heart Monitor</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#444444" />
@@ -12,14 +12,6 @@
   <body>
     <div class="connect-ui">
       <button class="connect">connect</button>
-      <div>
-        No heart monitor device?
-        <a
-          href="https://github.com/megaconfidence/bt-heart-monitor#set-up-a-heart-monitor-emulator"
-          target="_blank"
-          >Set up an emulator</a
-        >
-      </div>
       <div class="error hide">
         ⚠️ This browser does not support the Web Bluetooth API. Please try a
         different browser
@@ -61,8 +53,18 @@
       <div class="buttons">
         <button class="start">start</button>
         <button class="stop">stop</button>
+        <button class="export-history">export old data</button>
       </div>
       <button class="export hide">export csv</button>
+      <div class="modal hide">
+        <div class="modal-card">
+          <h3>Past sessions</h3>
+          <ul class="session-list"></ul>
+          <div class="modal-actions">
+            <button class="modal-close">close</button>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="index.js"></script>
     <script>
