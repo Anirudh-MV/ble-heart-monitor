@@ -65,6 +65,24 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.app-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #222;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.connect-ui p {
+  margin-bottom: 12px;
+  max-width: 480px;
+  text-align: left;
+  line-height: 1.65;
+  font-size: 14px;
+  color: #555;
+}
+
 .error {
   margin-top: 10px;
 }
