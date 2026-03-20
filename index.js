@@ -14,6 +14,21 @@ const lowerAudio = document.querySelector(".audio-lower");
 const upperAudio = document.querySelector(".audio-upper");
 const withinAudio = document.querySelector(".audio-within");
 const batteryTxt = document.querySelector(".battery-level");
+const voiceToggleBTN = document.querySelector(".voice-toggle");
+
+// Voice (alert audio) enabled state — persisted in localStorage
+let voiceEnabled = localStorage.getItem('bthm-voice') !== '0';
+
+function setVoice(enabled) {
+  voiceEnabled = enabled;
+  localStorage.setItem('bthm-voice', enabled ? '1' : '0');
+  if (voiceToggleBTN) voiceToggleBTN.textContent = enabled ? 'Voice On' : 'Voice Off';
+}
+
+if (voiceToggleBTN) {
+  voiceToggleBTN.textContent = voiceEnabled ? 'Voice On' : 'Voice Off';
+  voiceToggleBTN.addEventListener('click', () => setVoice(!voiceEnabled));
+}
 
 let device;
 let heartRate;
@@ -136,7 +151,7 @@ function checkAlerts(bpm) {
       lowerAlertFired = false;
     } else if (!lowerAlertFired && now - lowerBreachStart >= thresholdMs) {
       lowerAudio.currentTime = 0;
-      lowerAudio.play();
+      if (voiceEnabled) lowerAudio.play();
       notifyAlert(`Heart rate ${bpm} BPM is below the lower limit of ${lowerLimit} BPM`);
       lowerAlertFired = true;
     }
@@ -152,7 +167,7 @@ function checkAlerts(bpm) {
       upperAlertFired = false;
     } else if (!upperAlertFired && now - upperBreachStart >= thresholdMs) {
       upperAudio.currentTime = 0;
-      upperAudio.play();
+      if (voiceEnabled) upperAudio.play();
       notifyAlert(`Heart rate ${bpm} BPM is above the upper limit of ${upperLimit} BPM`);
       upperAlertFired = true;
     }
@@ -176,7 +191,7 @@ function checkAlerts(bpm) {
       withinAlertFired = false;
     } else if (!withinAlertFired && now - withinRangeStart >= thresholdMs) {
       withinAudio.currentTime = 0;
-      withinAudio.play();
+      if (voiceEnabled) withinAudio.play();
       notifyAlert(`Heart rate ${bpm} BPM is back within range`);
       withinAlertFired = true;
     }
@@ -192,9 +207,8 @@ function handleRateChange(event) {
 
   if (isRecording) {
     recordingData.push({ timestamp: Date.now(), bpm });
+    checkAlerts(bpm);
   }
-
-  checkAlerts(bpm);
 }
 
 async function requestDevice() {
