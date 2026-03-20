@@ -57,11 +57,13 @@ for (let bpm = 30; bpm <= 220; bpm += 5) {
   const optLower = document.createElement("option");
   optLower.value = bpm;
   optLower.textContent = bpm;
+  if (bpm === 120) optLower.selected = true;
   lowerLimitSel.appendChild(optLower);
 
   const optUpper = document.createElement("option");
   optUpper.value = bpm;
   optUpper.textContent = bpm;
+  if (bpm === 145) optUpper.selected = true;
   upperLimitSel.appendChild(optUpper);
 }
 
@@ -186,6 +188,7 @@ async function startMonitoring() {
   recordingData = [];
   exportBTN.classList.add("hide");
   startBTN.disabled = true;
+  stopBTN.disabled = false;
 
   // Reset alert state on new session
   lowerBreachStart = null;
@@ -200,6 +203,7 @@ async function startMonitoring() {
 async function stopMonitoring() {
   isRecording = false;
   startBTN.disabled = false;
+  stopBTN.disabled = true;
   // Save session to history if any data was recorded
   if (recordingData.length > 0) {
     saveSession(recordingData);
@@ -290,10 +294,11 @@ async function exportHistoricSession(sessionId) {
 }
 
 // UI: Export history via native select picker
-const exportHistoryBTN = document.querySelector(".export-history");
 const sessionPicker = document.querySelector(".session-picker");
 
-exportHistoryBTN.addEventListener("click", openHistoryPicker);
+document.querySelectorAll(".export-history").forEach(btn =>
+  btn.addEventListener("click", openHistoryPicker)
+);
 sessionPicker.addEventListener("change", () => {
   const id = sessionPicker.value;
   sessionPicker.value = "";
@@ -316,6 +321,17 @@ async function openHistoryPicker() {
   sessionPicker.showPicker();
 }
 
+async function disconnect() {
+  if (isRecording) await stopMonitoring();
+  if (device && device.gatt.connected) device.gatt.disconnect();
+  bpmTxt.textContent = "--";
+  appUI.classList.add("hide");
+  connectUI.classList.remove("hide");
+  connectBTN.textContent = "connect";
+  device = null;
+  heartRate = null;
+}
+
 async function init() {
   if (!navigator.bluetooth) return errorTxt.classList.remove("hide");
   if (!device) await requestDevice();
@@ -332,7 +348,10 @@ async function init() {
   }
 }
 
+const disconnectBTN = document.querySelector(".disconnect");
+
 connectBTN.addEventListener("click", init);
+disconnectBTN.addEventListener("click", disconnect);
 stopBTN.addEventListener("click", stopMonitoring);
 startBTN.addEventListener("click", startMonitoring);
 exportBTN.addEventListener("click", exportCSV);

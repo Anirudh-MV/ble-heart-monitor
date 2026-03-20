@@ -134,6 +134,19 @@ button:disabled {
   border-color: #3b5aa6;
 }
 
+.disconnect {
+  background: #9b2335;
+  border-color: #9b2335;
+}
+
+.session-picker {
+  position: fixed;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
 .export {
   background: #2a7d4f;
   border-color: #2a7d4f;
