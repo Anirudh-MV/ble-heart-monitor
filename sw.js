@@ -30,10 +30,18 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Cache-first: serve from cache, fall back to network
+// Stale-while-revalidate: serve from cache immediately, update cache in background
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request).then((response) => {
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        });
+        return cached || fetchPromise;
+      })
+    )
   );
 });
 

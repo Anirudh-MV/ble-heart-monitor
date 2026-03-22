@@ -69,7 +69,7 @@
       </div>
       <div class="buttons">
         <button class="start">start</button>
-        <button class="stop">stop</button>
+        <button class="stop" disabled>stop</button>
         <button class="export-history">export old data</button>
         <button class="dark-toggle">Dark</button>
         <button class="pip-toggle">PiP</button>
@@ -80,7 +80,38 @@
     </div>
     <script src="index.js"></script>
     <script>
-      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+      // Rapid-refresh force-update: 5+ loads in 10s clears all caches and re-fetches from server
+      (function () {
+        var key = 'bthm-loads';
+        var now = Date.now();
+        var loads = JSON.parse(localStorage.getItem(key) || '[]');
+        loads.push(now);
+        loads = loads.filter(function (t) { return now - t < 10000; });
+        localStorage.setItem(key, JSON.stringify(loads));
+        if (loads.length >= 5) {
+          localStorage.removeItem(key);
+          caches.keys().then(function (ks) {
+            return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+          });
+          navigator.serviceWorker.getRegistration().then(function (r) {
+            if (r) r.unregister();
+          });
+          setTimeout(function () { location.reload(); }, 300);
+        }
+      })();
+
+      // Register SW and check for updates on every app open / foreground resume
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          reg.update();
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') reg.update();
+          });
+        });
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          window.location.reload();
+        });
+      }
     </script>
   </body>
 </html>

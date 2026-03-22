@@ -260,6 +260,7 @@ async function startMonitoring() {
   exportBTN.classList.add("hide");
   startBTN.disabled = true;
   stopBTN.disabled = false;
+  heartUI.classList.add("recording");
 
   // Keep screen on while recording
   await acquireWakeLock();
@@ -277,6 +278,7 @@ async function stopMonitoring() {
   isRecording = false;
   startBTN.disabled = false;
   stopBTN.disabled = true;
+  heartUI.classList.remove("recording");
   await releaseWakeLock();
   // Save session to history if any data was recorded
   if (recordingData.length > 0) {

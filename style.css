@@ -52,6 +52,12 @@ body {
 
 .heart img {
   width: 250px;
+  filter: grayscale(100%);
+  transition: filter 0.3s;
+}
+
+.heart.recording img {
+  filter: none;
 }
 
 .bpm {
